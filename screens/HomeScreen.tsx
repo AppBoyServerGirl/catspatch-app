@@ -1,7 +1,7 @@
 import React from 'react';
 import {StyleSheet} from 'react-native';
 
-import {Box, Text, View} from 'native-base';
+import {Box, ScrollView, Text, View} from 'native-base';
 import {RootTabScreenProps} from '../types';
 // import CalendarPicker from 'react-native-calendar-picker';
 import CalendarPicker from '../components/CalendarPicker';
@@ -17,7 +17,7 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
   let day = today.clone().startOf('month');
   let customDatesStyles = [];
   while (day.isSame(today, 'month')) {
-    console.log(day.clone().date(), day.clone().date() % 5)
+    // console.log(day.clone().date(), day.clone().date() % 5)
     customDatesStyles.push({
       date: day.clone(),
       // Random colors
@@ -33,7 +33,7 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
   }
 
   return (
-    <View pt={`${top}px`} flex={1}>
+    <ScrollView pt={`${top}px`} >
       <CalendarPicker
         startFromMonday={true}
         onDateChange={setSelectedDate}
@@ -82,7 +82,7 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
           {selectedDate.format('YYYY-MM-DD')}의 내용
         </Text>
       </Box>
-    </View>
+    </ScrollView>
   );
 }
 
