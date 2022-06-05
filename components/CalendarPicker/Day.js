@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import {Circle, Image} from 'native-base';
+import Emotion from '../Emotion';
 
 export default function Day(props) {
   const {
@@ -41,6 +42,11 @@ export default function Day(props) {
 
   const thisDay = moment({year, month, day, hour: 12});
   const today = moment();
+
+  const [custom, setCustom] = React.useState({});
+  useEffect(() => {
+    setCustom(getCustomDateStyle({customDatesStyles, date: thisDay}));
+  }, [customDatesStyles])
 
   let dateOutOfRange;
   let computedSelectedDayStyle = styles.dayButton; // may be overridden depending on state
@@ -128,7 +134,7 @@ export default function Day(props) {
         propSelectedDayTextStyle];
     }
 
-    const custom = getCustomDateStyle({customDatesStyles, date: thisDay});
+    // const custom = getCustomDateStyle({customDatesStyles, date: thisDay});
 
     if (isToday && custom.style) {
       // Custom date style overrides 'today' style. It may be reset below
@@ -232,13 +238,6 @@ export default function Day(props) {
         </View>
       );
     } else {
-      const emotions = [
-        require('../../assets/images/emotions/emotion_1.jpg'),
-        require('../../assets/images/emotions/emotion_2.jpg'),
-        require('../../assets/images/emotions/emotion_3.jpg'),
-        require('../../assets/images/emotions/emotion_4.jpg'),
-        require('../../assets/images/emotions/emotion_5.jpg'),
-      ];
       return (
         <View style={[styles.dayWrapper, custom.containerStyle]}>
           <TouchableOpacity
@@ -253,21 +252,17 @@ export default function Day(props) {
             >
               {day}
             </Text>
-            {custom.emotion !== undefined &&
-              <Circle size={'40px'} overflow={'hidden'} alignSelf={'center'} mt={'4px'}>
-              <Image
-                source={emotions[custom.emotion]}
-                alt={'emotion'}
-                w={'100%'} h={'100%'}
-              />
-              </Circle>
+            {/*<Emotion emotion={custom.emotion}/>*/}
+            {custom.emotion !== undefined ?
+              <Emotion emotion={custom.emotion}/>
+              : <Emotion emotion={0}/>
             }
           </TouchableOpacity>
         </View>
       );
     }
   } else {  // dateOutOfRange = true, and no selected start or end date.
-    const custom = getCustomDateStyle({customDatesStyles, date: thisDay});
+    // const custom = getCustomDateStyle({customDatesStyles, date: thisDay});
     // Allow customDatesStyles to override disabled dates if allowDisabled set
     if (!custom.allowDisabled) {
       custom.containerStyle = null;
