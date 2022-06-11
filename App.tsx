@@ -7,6 +7,7 @@ import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
 import Navigation from './navigation';
 import 'moment/locale/ko';
+import {theme} from "./theme";
 
 export default function App() {
   const isLoadingComplete = useCachedResources();
@@ -17,7 +18,7 @@ export default function App() {
   } else {
     return (
       <SafeAreaProvider>
-        <NativeBaseProvider>
+        <NativeBaseProvider theme={theme}>
           <Navigation colorScheme={colorScheme}/>
           <StatusBar/>
         </NativeBaseProvider>

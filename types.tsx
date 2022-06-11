@@ -16,7 +16,7 @@ declare global {
 
 export type RootStackParamList = {
   Root: NavigatorScreenParams<RootTabParamList> | undefined;
-  MemoModal: { emotion?: number, memo?: string, date?: string } | undefined;
+  MemoModal: { emotion?: number, content?: string, date?: string } | undefined;
   NotFound: undefined;
 };
 

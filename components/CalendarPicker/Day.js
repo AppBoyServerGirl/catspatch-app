@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import PropTypes from 'prop-types';
 import moment from 'moment';
-import {Circle, Image} from 'native-base';
+import {Circle, Image, Text as NBText} from 'native-base';
 import Emotion from '../Emotion';
 
 export default function Day(props) {
@@ -42,11 +42,6 @@ export default function Day(props) {
 
   const thisDay = moment({year, month, day, hour: 12});
   const today = moment();
-
-  const [custom, setCustom] = React.useState({});
-  useEffect(() => {
-    setCustom(getCustomDateStyle({customDatesStyles, date: thisDay}));
-  }, [customDatesStyles])
 
   let dateOutOfRange;
   let computedSelectedDayStyle = styles.dayButton; // may be overridden depending on state
@@ -134,7 +129,7 @@ export default function Day(props) {
         propSelectedDayTextStyle];
     }
 
-    // const custom = getCustomDateStyle({customDatesStyles, date: thisDay});
+    const custom = getCustomDateStyle({customDatesStyles, date: thisDay});
 
     if (isToday && custom.style) {
       // Custom date style overrides 'today' style. It may be reset below
@@ -149,8 +144,9 @@ export default function Day(props) {
       computedSelectedDayStyle = styles.selectedDay;
       selectedDayTextStyle = [
         styles.selectedDayLabel,
+        propSelectedDayTextStyle,
         isToday && todayTextStyle,
-        propSelectedDayTextStyle];
+      ];
       // selectedDayStyle prop overrides selectedDayColor (created via makeStyles)
       selectedDayStyle = propSelectedDayStyle || styles.selectedDayBackground;
     }
@@ -248,21 +244,23 @@ export default function Day(props) {
               styles.dayLabel,
               textStyle,
               custom.textStyle,
-              selectedDayTextStyle]}
+              selectedDayTextStyle,
+              isToday && todayTextStyle,
+            ]}
             >
               {day}
             </Text>
-            {/*<Emotion emotion={custom.emotion}/>*/}
-            {custom.emotion !== undefined ?
-              <Emotion emotion={custom.emotion}/>
-              : <Emotion emotion={0}/>
-            }
+            <Emotion emotion={custom.emotion}/>
+
+            {/*{custom.emotion !== undefined*/}
+            {/*  && <Emotion emotion={emotion}/>*/}
+            {/*}*/}
           </TouchableOpacity>
         </View>
       );
     }
   } else {  // dateOutOfRange = true, and no selected start or end date.
-    // const custom = getCustomDateStyle({customDatesStyles, date: thisDay});
+    const custom = getCustomDateStyle({customDatesStyles, date: thisDay});
     // Allow customDatesStyles to override disabled dates if allowDisabled set
     if (!custom.allowDisabled) {
       custom.containerStyle = null;
@@ -276,7 +274,9 @@ export default function Day(props) {
             textStyle,
             styles.disabledText,
             disabledDatesTextStyle,
-            custom.textStyle]}>
+            custom.textStyle,
+
+          ]}>
             {day}
           </Text>
         </View>

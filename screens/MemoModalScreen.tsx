@@ -9,7 +9,7 @@ import Emotion from "../components/Emotion";
 export default function MemoModalScreen({navigation, route}) {
   const {date} = route.params;
   const [selectedEmotion, setSelectedEmotion] = useState(route.params?.emotion || 0);
-  const [memo, setMemo] = useState(route.params?.memo || '');
+  const [content, setContent] = useState(route.params?.content || '');
   const onPressSave = () => {
     navigation.goBack();
   }
@@ -26,7 +26,10 @@ export default function MemoModalScreen({navigation, route}) {
         alignItems={'center'} justifyContent={'space-around'}
       >
         {[5, 4, 3, 2, 1].map(emotion => (
-          <Pressable onPress={() => setSelectedEmotion(emotion)}>
+          <Pressable
+            key={emotion}
+            onPress={() => setSelectedEmotion(emotion)}
+          >
             <Box opacity={selectedEmotion === emotion ? 1 : 0.5}>
               <Emotion emotion={emotion}/>
             </Box>
@@ -36,9 +39,9 @@ export default function MemoModalScreen({navigation, route}) {
 
       <Box mt={'24px'} mb={'48px'} w={'100%'} px={'16px'}>
       <Input
-        placeholder="메모를 입력하세요"
-        value={memo}
-        onChangeText={text => setMemo(text)}
+        placeholder="내용을 입력하세요"
+        value={content}
+        onChangeText={text => setContent(text)}
         height={'100px'}
         multiline={true}
       />

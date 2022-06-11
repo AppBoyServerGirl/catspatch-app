@@ -1,35 +1,37 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useMemo} from 'react';
 import * as Notifications from 'expo-notifications';
-import {Box, HStack, Pressable, ScrollView, Text, View} from 'native-base';
+import {Box, HStack, Input, Pressable, ScrollView, Text, useColorMode, View} from 'native-base';
 import {RootTabScreenProps} from '../types';
 // import CalendarPicker from 'react-native-calendar-picker';
 import CalendarPicker from '../components/CalendarPicker';
 import moment from "moment";
 import {Feather, SimpleLineIcons} from "@expo/vector-icons";
 import {registerForPushNotificationsAsync} from "../components/Utils";
-import {Alert, SafeAreaView} from "react-native";
+import {Alert, SafeAreaView, useColorScheme} from "react-native";
 import axios from "axios";
 import {HOST} from "../constants/Api";
+import Emotion from "../components/Emotion";
+import {useThemeColor} from "../components/Themed";
 
 export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
   const [selectedMonth, setSelectedMonth] = React.useState(0);
   const [selectedDate, setSelectedDate] = React.useState(moment());
+  const selectedDateString = useMemo(() => selectedDate.format('YYYY-MM-DD'), [selectedDate]);
   const [customDatesStyles, setCustomDatesStyles] = React.useState<{ [key: string]: any }>([]);
   const dummyDiaries = [
-    {date: '2022-06-01', emotion: 5, memo: '오늘은 좋은날입니다1.'},
-    {date: '2022-06-02', emotion: 4, memo: '오늘은 좋은날입니다2.'},
-    {date: '2022-06-03', emotion: 3, memo: '오늘은 좋은날입니다3.'},
-    {date: '2022-06-04', emotion: 2, memo: '오늘은 좋은날입니다4.'},
+    {date: '2022-06-01', emotion: 5, content: '오늘은 좋은날입니다1.'},
+    {date: '2022-06-02', emotion: 4, content: '오늘은 좋은날입니다2.'},
+    {date: '2022-06-03', emotion: 3, content: '오늘은 좋은날입니다3.'},
+    {date: '2022-06-05', emotion: 2, content: '오늘은 좋은날입니다4.'},
   ];
   const [diaries, setDiaries] = useState<{ [key: string]: any }>({});
 
   const convertDiariesToJson = (diaries) => {
-    return diaries.map(diary => ({
-      [diary.date]: {
-        emotion: diary.emotion,
-        memo: diary.memo,
-      }
-    }))
+    const json = {};
+    diaries.forEach(diary => {
+      json[diary.date] = {emotion: diary.emotion, content: diary.content};
+    })
+    return json;
   }
   const getDates = async () => {
     // const res = await axios.get(HOST + '/api/dates');
@@ -44,32 +46,22 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
     getDates();
   }, [selectedMonth])
 
-  // useEffect(() => {
-  //   let today = moment();
-  //   let day = today.clone().startOf('month');
-  //   let _customDatesStyles = [];
-  //   while (day.isSame(today, 'month')) {
-  //     _customDatesStyles.push({
-  //       date: day.clone(),
-  //       // textStyle: {color: 'black'}, // sets the font color
-  //       // containerStyle: [{marginVertical: 16,}], // extra styling for day container
-  //       allowDisabled: true, // allow custom style to apply to disabled dates
-  //       emotion: day.date() % 5 + 1,
-  //     });
-  //
-  //     day.add(1, 'day')
-  //   }
-  //   setCustomDatesStyles(_customDatesStyles);
-  //
-  // }, [selectedMonth]);
-
   const [expoPushToken, setExpoPushToken] = useState('');
+  useEffect(() => {
+    if(expoPushToken){
+      console.log('token :', expoPushToken)
+    }
+  }, [expoPushToken])
+
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+    registerForPushNotificationsAsync().then(token => {
+
+      setExpoPushToken(token);
+    });
 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       setNotification(notification);
@@ -86,7 +78,13 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
   }, []);
 
   const onPressEdit = () => {
-    navigation.navigate('MemoModal', {date: selectedDate.format('YYYY-MM-DD')});
+    if (moment(selectedDateString).isSameOrBefore(moment())) {
+      navigation.navigate('MemoModal', {
+        date: selectedDateString,
+        emotion: diaries[selectedDateString]?.emotion,
+        content: diaries[selectedDateString]?.content,
+      });
+    }
   }
   const onPressDelete = () => {
     Alert.alert(
@@ -98,50 +96,55 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
-        {text: "삭제", onPress: () => console.log("OK Pressed"), style: "destructive"}
+        {
+          text: "삭제",
+          onPress: () => console.log("OK Pressed"),
+          style: "destructive"
+        }
       ]
     );
   }
 
+  const colorScheme = useColorScheme();
+  const themeTextColor = useMemo(() => colorScheme === 'light' ? 'black' : 'white', [colorScheme]);
+  const themeTextStyle = useMemo(() => ({color: themeTextColor}), [themeTextColor])
+
   return (
     <SafeAreaView style={{flex: 1}}>
+      {!!expoPushToken && <Input value={expoPushToken || ''}/>}
       <ScrollView>
         <CalendarPicker
           // startFromMonday={true}
+
           onMonthChange={(month) => {
             setSelectedMonth(moment(month).month() + 1)
           }}
           onDateChange={setSelectedDate}
-          nextComponent={<SimpleLineIcons name="arrow-right" size={20} color="black"/>}
-          previousComponent={<SimpleLineIcons name="arrow-left" size={20} color="black"/>}
+          nextComponent={<SimpleLineIcons name="arrow-right" size={20} color={themeTextColor}/>}
+          previousComponent={<SimpleLineIcons name="arrow-left" size={20} color={themeTextColor}/>}
           months={['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']}
           weekdays={['일', '월', '화', '수', '목', '금', '토',]}
           dayLabelsWrapper={{
             borderRadius: 10,
             borderWidth: 1,
             borderColor: '#e3e3e3',
-            backgroundColor: '#fff',
+            backgroundColor: 'transparent',
             padding: 10,
             margin: 10,
           }}
-          textStyle={{
-            color: '#000',
-            // fontSize: 18,
-            // fontWeight: 'bold',
-          }}
-          // selectedDayStyle={{
-          //   width: 50,
-          //   height: 50,
-          // }}
+          textStyle={themeTextStyle}
+
           selectedDayColor={'transparent'}
           selectedDayTextStyle={{
+            ...themeTextStyle,
             fontWeight: 'bold',
           }}
           dayWrapper={{
             height: 100,
           }}
+
           todayBackgroundColor={'transparent'}
-          todayTextStyle={{color: 'hotpink'}}
+          todayTextStyle={{color: 'hotpink', fontWeight: 'bold',}}
 
           customDatesStyles={customDatesStyles}
 
@@ -154,21 +157,24 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
               {selectedDate.format('YYYY-MM-DD')}
             </Text>
 
-            <HStack space={'12px'}>
+            <HStack space={'18px'}>
               <Pressable onPress={onPressEdit}>
-                <Feather name="edit" size={16} color="black"/>
+                <Feather name="edit" size={20} color={themeTextColor}/>
               </Pressable>
               <Pressable onPress={onPressDelete}>
-                <Feather name="trash-2" size={16} color="black"/>
+                <Feather name="trash-2" size={20} color={themeTextColor}/>
               </Pressable>
             </HStack>
           </HStack>
 
-          <Text>
-            {selectedDate.format('YYYY-MM-DD')}의 내용
-            {/*{selectedDate.date()}*/}
-          </Text>
+          <HStack space={'12px'} mt={'12px'}>
+            <Emotion emotion={diaries[selectedDateString]?.emotion} size={60}/>
+            <Text>
+              {diaries[selectedDateString]?.content}
+            </Text>
+          </HStack>
         </Box>
+
 
       </ScrollView>
     </SafeAreaView>
